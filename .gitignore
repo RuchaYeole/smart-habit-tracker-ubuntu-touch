@@ -1,0 +1,9 @@
+build/
+.cache/
+*.pyc
+__pycache__/
+.env
+.venv/
+venv/
+backend/venv/
+backend/habits.db

@@ -1,0 +1,15 @@
+{
+    "name": "smart-habit",
+    "description": "Smart Habit Tracker",
+    "architecture": "all",
+    "title": "Smart Habit Tracker",
+    "version": "1.0.0",
+    "maintainer": "Rucha",
+    "framework": "ubuntu-sdk-20.04",
+    "hooks": {
+        "smart-habit": {
+            "apparmor": "smart-habit.apparmor",
+            "desktop": "smart-habit.desktop"
+        }
+    }
+}

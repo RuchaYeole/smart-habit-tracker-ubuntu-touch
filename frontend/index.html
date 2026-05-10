@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Habit Tracker</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f5f7fa;
+            text-align: center;
+            padding: 20px;
+        }
+
+        input {
+            padding: 10px;
+            width: 200px;
+        }
+
+        button {
+            padding: 8px 12px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .habit {
+            background: white;
+            margin: 10px auto;
+            padding: 15px;
+            width: 300px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Smart Habit Tracker</h1>
+
+<input id="habitInput" placeholder="Enter habit">
+<button onclick="addHabit()" style="background:green">Add Habit</button>
+
+<div id="habitList"></div>
+
+<canvas id="chart"></canvas>
+
+<script>
+
+const API = "http://localhost:5000";
+let chart;
+
+function addHabit() {
+    const name = document.getElementById("habitInput").value;
+
+    if (!name.trim()) {
+        alert("Enter a habit");
+        return;
+    }
+
+    fetch(API + "/add_habit", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ name })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.message === "Habit already exists") {
+            alert("Habit already exists");
+        }
+        loadHabits();
+    });
+}
+
+function loadHabits() {
+    fetch(API + "/get_habits")
+        .then(res => res.json())
+        .then(data => {
+
+            const list = document.getElementById("habitList");
+            list.innerHTML = "";
+
+            data.forEach(habit => {
+
+                const score = (habit.streak || 0) - (habit.distractions || 0);
+
+                list.innerHTML += `
+                    <div class="habit">
+                        <b>${habit.name}</b><br>
+                        Streak: ${habit.streak}<br>
+                        Distractions: ${habit.distractions}<br>
+                        Focus Score: ${score}<br>
+
+                        <button onclick="markDone(${habit.id})" style="background:green">Done</button>
+                        <button onclick="addDistraction(${habit.id})" style="background:red">Distraction</button>
+                        <button onclick="resetStreak(${habit.id})" style="background:orange">Reset</button>
+                        <button onclick="deleteHabit(${habit.id})" style="background:black">Delete</button>
+                    </div>
+                `;
+            });
+
+            drawChart(data);
+        });
+}
+
+function markDone(id) {
+    fetch(API + "/mark_done", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ id })
+    }).then(() => loadHabits());
+}
+
+function addDistraction(id) {
+    fetch(API + "/add_distraction", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ id })
+    }).then(() => loadHabits());
+}
+
+function resetStreak(id) {
+    fetch(API + "/reset_streak", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ id })
+    }).then(() => loadHabits());
+}
+
+function deleteHabit(id) {
+    fetch(API + "/delete_habit", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ id })
+    }).then(() => loadHabits());
+}
+
+function drawChart(data) {
+
+    const ctx = document.getElementById("chart");
+
+    const labels = data.map(h => h.name);
+    const values = data.map(h => (h.streak || 0) - (h.distractions || 0));
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Focus Score",
+                data: values,
+                tension: 0.3
+            }]
+        }
+    });
+}
+
+window.onload = loadHabits;
+
+</script>
+
+</body>
+</html>

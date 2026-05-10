@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Smart Habit Tracker
+Exec=qmlscene qml/Main.qml
+Icon=icon.png
+Terminal=false
+Type=Application
+X-Ubuntu-Touch=true
